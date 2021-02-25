@@ -22,7 +22,7 @@ genstress: genstress.42m miniws.42m endStress.js
 	fglrun genstress
 	fglrun miniws
 
-genstressf: genstress.42m miniws.42m endStress.js
+genstressf: genstress.42m fgl_http_server.42m endStress.js
 	fglrun genstress
 	fglrun fgl_http_server
 
