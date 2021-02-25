@@ -40,7 +40,7 @@ MAIN
         EXIT WHILE
       OTHERWISE
         LET fn = path.subString(2, path.getLength())
-        DISPLAY "try reading:", fn
+        --DISPLAY "try reading:", fn
         IF NOT os.Path.exists(fn) THEN
           DISPLAY "call http404 for :",fn
           CALL http404(c, fn)

@@ -8,12 +8,14 @@ DEFINE m_htport INT
 DEFINE m_owndir, m_privdir STRING
 DEFINE m_showallheaders STRING
 DEFINE m_starttime DATETIME HOUR TO FRACTION(1)
+DEFINE m_verbose BOOLEAN
 
 MAIN
   DEFINE req com.HTTPServiceRequest
   DEFINE text, url, path, fname, pre,clitag STRING
   DEFINE gzip BOOLEAN
   LET m_starttime=CURRENT
+  LET m_verbose=FALSE
   CALL fglproxy.init()
   LET m_owndir = os.Path.fullPath(os.Path.dirname(arg_val(0)))
   LET m_privdir = os.Path.join(m_owndir, "priv")
@@ -42,7 +44,9 @@ MAIN
 &else
       LET path = req.getUrlPath()
 &endif
-      DISPLAY "miniws path:", path, ",", req.getMethod(),",clitag:",clitag
+      IF m_verbose THEN
+        DISPLAY "miniws path:", path, ",", req.getMethod(),",clitag:",clitag
+      END IF
       CASE
         WHEN path = "/index.html"
           LET text = "<!DOCTYPE html><html><body>Hello</body></html>"
@@ -57,7 +61,7 @@ MAIN
           EXIT WHILE
         OTHERWISE
           LET fname = path.subString(2,path.getLength())
-          DISPLAY "fname:",fname
+          --DISPLAY "fname:",fname
           CALL fglproxy.processFile(req, fname, clitag, gzip, TRUE) --do cache
       END CASE
     END IF

@@ -78,7 +78,6 @@ DEFINE _starttime DATETIME HOUR TO FRACTION(1)
 DEFINE _stderr base.Channel
 
 DEFINE _pendingKeys HashSet
-DEFINE m_isMac INT
 DEFINE _htpre STRING
 DEFINE _serverkey SelectionKey
 DEFINE _server ServerSocketChannel
@@ -89,8 +88,7 @@ MAIN
   DEFINE selector Selector
   DEFINE port INT
   DEFINE htpre STRING
-  LET _verbose = TRUE
-  LET m_isMac = NULL
+  LET _verbose = FALSE
   LET _starttime = CURRENT
   CALL fglproxy.init()
   LET _server = ServerSocketChannel.open();
@@ -381,18 +379,7 @@ FUNCTION processFile(fname STRING, cache BOOLEAN)
       END CASE
       LET hdrs = getCacheHeaders(cache, etag)
       CALL writeResponseFileHdrs(fname, ct, hdrs)
-      --CALL setContentTypeAndCache(req,ct,cache,etag)
-      --CALL req.sendDataResponse(200,NULL,readBlob(fname))
   END CASE
-END FUNCTION
-
-FUNCTION cut_question(fname)
-  DEFINE fname STRING
-  DEFINE idx INT
-  IF (idx := fname.getIndexOf("?", 1)) <> 0 THEN
-    RETURN fname.subString(1, idx - 1)
-  END IF
-  RETURN fname
 END FUNCTION
 
 FUNCTION http404(fn STRING)
@@ -523,10 +510,6 @@ FUNCTION handleConnection(key SelectionKey, selector Selector)
   CALL handleConnectionInt(key, chan, selector)
 END FUNCTION
 
-FUNCTION storeSel(_sel TSelectionRec)
-  UNUSED_VAR(_sel)
-END FUNCTION
-
 FUNCTION reRegister(chan SocketChannel, selector Selector)
   DEFINE key, newkey SelectionKey
   DEFINE o java.lang.Object
@@ -543,15 +526,12 @@ FUNCTION reRegister(chan SocketChannel, selector Selector)
       LET o = it.next()
       LET key = CAST(o AS SelectionKey);
       IF NOT _pendingKeys.contains(key) THEN
-        CALL log(SFMT("reRegister:add to PendingKeys:%1", printKey(key)))
+        --CALL log(SFMT("reRegister:add to PendingKeys:%1", printKey(key)))
         CALL _pendingKeys.add(o)
-        --ELSE
-        --DISPLAY "  !!!!pendingKey already has:",printKey( key )
       END IF
     END WHILE
   END IF
   LET newkey = chan.register(selector, SelectionKey.OP_READ);
-  --LET _sel.key = newkey
   CALL newkey.attach(_sel)
 END FUNCTION
 
@@ -562,7 +542,6 @@ FUNCTION handleConnectionInt(
   DEFINE bytearr ByteArray
   DEFINE jstring java.lang.String
   LET dIn = _sel.dIn
-  --DISPLAY "before: buf pos:",buf.position(),",caApacity:",buf.capacity(),",limit:",buf.limit()
   CALL key.interestOps(0)
   CALL key.cancel()
   CALL chan.configureBlocking(TRUE)
@@ -589,7 +568,6 @@ FUNCTION handleConnectionInt(
       MYASSERT(_sel.isHTTP AND _sel.state == S_HEADERS)
       IF _sel.contentLen > 0 THEN
         LET _sel.state = S_WAITCONTENT
-        --DISPLAY "br ready:",br.ready()
         EXIT WHILE
       ELSE
         --DISPLAY "Finish of :", _sel.path
