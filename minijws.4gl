@@ -33,8 +33,7 @@ IMPORT JAVA java.util.HashSet
 IMPORT JAVA java.util.Iterator --<SelectionKey>
 IMPORT JAVA java.lang.String
 IMPORT JAVA java.lang.Object
-&define INOUT --empty ... can be enhanced for 4.00
-CONSTANT _keepalive = FALSE
+CONSTANT _keepalive = TRUE
 
 PUBLIC TYPE TStartEntries RECORD
   port INT,
@@ -43,7 +42,6 @@ PUBLIC TYPE TStartEntries RECORD
   url STRING
 END RECORD
 
---TYPE MyByteArray ARRAY[] OF TINYINT
 TYPE TStringDict DICTIONARY OF STRING
 TYPE TStringArr DYNAMIC ARRAY OF STRING
 TYPE ByteArray ARRAY[] OF TINYINT
@@ -51,7 +49,6 @@ TYPE ByteArray ARRAY[] OF TINYINT
 CONSTANT S_INIT = "Init"
 CONSTANT S_HEADERS = "Headers"
 CONSTANT S_WAITCONTENT = "WaitContent"
-CONSTANT S_WAITFORVM = "WaitForVM"
 CONSTANT S_FINISH = "Finish"
 
 TYPE TSelectionRec RECORD
@@ -120,6 +117,7 @@ MAIN
   WHILE TRUE
     CALL processKeys("_pendingKeys:", _pendingKeys, selector)
     CALL _pendingKeys.clear()
+    --CALL printKeys("before select(),registered keys:",selector.keys())
     CALL selector.select();
     CALL processKeys("selectedKeys():", selector.selectedKeys(), selector)
   END WHILE
@@ -494,10 +492,12 @@ END FUNCTION
 FUNCTION handleConnection(key SelectionKey, selector Selector)
   DEFINE chan SocketChannel
   DEFINE readable BOOLEAN
+  DEFINE sel TSelectionRec
   TRY
     LET readable = key.isReadable()
   CATCH
-    DISPLAY "handleConnection:", printSel(_sel.*), err_get(status)
+    LET sel = CAST(key.attachment() AS TSelectionRec)
+    DISPLAY "handleConnection:", printSel(sel.*), ",err:",err_get(status)
     MYASSERT(false)
   END TRY
   IF NOT readable THEN
@@ -511,26 +511,29 @@ FUNCTION handleConnection(key SelectionKey, selector Selector)
 END FUNCTION
 
 FUNCTION reRegister(chan SocketChannel, selector Selector)
-  DEFINE key, newkey SelectionKey
-  DEFINE o java.lang.Object
-  DEFINE it Iterator
+  DEFINE newkey SelectionKey
+  --DEFINE key SelectionKey
+  --DEFINE o java.lang.Object
+  --DEFINE it Iterator
   DEFINE numKeys INT
   --DISPLAY "re register:", printSel(_sel.*)
   --re register the channel again
   CALL chan.configureBlocking(FALSE)
   LET numKeys = selector.selectNow()
+  {
   IF numKeys > 0 THEN
-    --DISPLAY "  selectNow:",numKeys
+    DISPLAY "  selectNow:",numKeys
     LET it = selector.selectedKeys().iterator()
     WHILE it.hasNext()
       LET o = it.next()
       LET key = CAST(o AS SelectionKey);
       IF NOT _pendingKeys.contains(key) THEN
-        --CALL log(SFMT("reRegister:add to PendingKeys:%1", printKey(key)))
+        CALL log(SFMT("reRegister:add to PendingKeys:%1", printKey(key)))
         CALL _pendingKeys.add(o)
       END IF
     END WHILE
   END IF
+  }
   LET newkey = chan.register(selector, SelectionKey.OP_READ);
   CALL newkey.attach(_sel)
 END FUNCTION
@@ -541,6 +544,7 @@ FUNCTION handleConnectionInt(
   DEFINE line STRING
   DEFINE bytearr ByteArray
   DEFINE jstring java.lang.String
+  CALL log(sfmt("handleConnectionInt:%1",printSel(_sel.*)))
   LET dIn = _sel.dIn
   CALL key.interestOps(0)
   CALL key.cancel()
@@ -601,7 +605,7 @@ END FUNCTION
 
 FUNCTION checkReRegister(chan SocketChannel, selector Selector)
   DEFINE newChan BOOLEAN
-  IF (_sel.state <> S_FINISH AND _sel.state <> S_WAITFORVM)
+  IF (_sel.state <> S_FINISH)
       OR (newChan := (_keepalive AND _sel.state == S_FINISH AND _sel.isHTTP))
           == TRUE THEN
     IF newChan THEN
