@@ -22,9 +22,13 @@ genstress: genstress.42m miniws.42m endStress.js
 	fglrun genstress
 	fglrun miniws
 
-genstressf: genstress.42m miniws.42m stressEnd.js
+genstressf: genstress.42m miniws.42m endStress.js
 	fglrun genstress
 	fglrun fgl_http_server
+
+genstressj: genstress.42m minijws.42m endStress.js
+	fglrun genstress
+	fglrun minijws
 
 clean:
 	rm -rf *.42? FontAwesome.ttf stress*.js stress.html priv
