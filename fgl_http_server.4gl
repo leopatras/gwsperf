@@ -363,3 +363,9 @@ FUNCTION findFreeServerPort(start, end, local)
   CALL myerr(SFMT("Can't find free port in the range %1-%2", start, end))
   RETURN -1
 END FUNCTION
+
+FUNCTION myerr(err)
+  DEFINE err STRING
+  DISPLAY "ERROR:", err
+  EXIT PROGRAM 1
+END FUNCTION
