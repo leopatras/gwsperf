@@ -3,6 +3,7 @@ OPTIONS
 SHORT CIRCUIT
 IMPORT com
 IMPORT os
+IMPORT FGL utils
 IMPORT FGL fglproxy
 DEFINE m_htport INT
 DEFINE m_owndir, m_privdir STRING
@@ -21,7 +22,7 @@ MAIN
   LET m_privdir = os.Path.join(m_owndir, "priv")
   LET m_showallheaders = fgl_getenv("SHOWALLHEADERS")
   CALL os.Path.mkdir(m_privdir) RETURNING status
-  LET m_htport = fglproxy.findFreeServerPort(9100,9300,FALSE)
+  LET m_htport = findFreeServerPort(9100,9300,FALSE)
   CALL fgl_setenv("FGLAPPSERVER",m_htport)
   --do I need this option?
   CALL com.WebServiceEngine.setOption("server_readwritetimeout", -1)
@@ -29,7 +30,8 @@ MAIN
   LET pre=sfmt("http://localhost:%1/",m_htport)
   LET url=sfmt("%1stress.html",pre)
   --LET url=sfmt("%1bart.png",pre)
-  CALL fglproxy.openBrowser(url)
+  DISPLAY "url:",url
+  CALL utils.openBrowserWithStress(m_htport)
   WHILE TRUE
     LET req = com.WebServiceEngine.getHTTPServiceRequest(-1)
     IF req IS NULL THEN

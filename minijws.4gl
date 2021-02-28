@@ -6,7 +6,7 @@ SHORT CIRCUIT
 &define UNUSED_VAR(var) INITIALIZE var TO NULL
 IMPORT os
 IMPORT util
-IMPORT FGL fglproxy
+IMPORT FGL utils
 IMPORT JAVA com.fourjs.fgl.lang.FglRecord
 IMPORT JAVA java.io.File
 IMPORT JAVA java.io.FileInputStream
@@ -33,7 +33,7 @@ IMPORT JAVA java.util.HashSet
 IMPORT JAVA java.util.Iterator --<SelectionKey>
 IMPORT JAVA java.lang.String
 IMPORT JAVA java.lang.Object
-CONSTANT _keepalive = TRUE
+CONSTANT _keepalive = FALSE
 
 PUBLIC TYPE TStartEntries RECORD
   port INT,
@@ -87,7 +87,6 @@ MAIN
   DEFINE htpre STRING
   LET _verbose = FALSE
   LET _starttime = CURRENT
-  CALL fglproxy.init()
   LET _server = ServerSocketChannel.open();
   CALL _server.configureBlocking(FALSE);
   LET socket = _server.socket();
@@ -113,7 +112,8 @@ MAIN
   LET selector = java.nio.channels.Selector.open()
   LET _serverkey = _server.register(selector, SelectionKey.OP_ACCEPT);
   LET _pendingKeys = HashSet.create()
-  CALL fglproxy.openBrowser(SFMT("%1stress.html", htpre))
+  DISPLAY SFMT("%1stress.html", htpre)
+  CALL utils.openBrowserWithStress(port)
   WHILE TRUE
     CALL processKeys("_pendingKeys:", _pendingKeys, selector)
     CALL _pendingKeys.clear()

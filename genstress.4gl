@@ -1,8 +1,8 @@
+IMPORT FGL utils
 MAIN
   DEFINE ch base.Channel
   DEFINE jsfile, func STRING
   DEFINE i INT
-  CONSTANT numFiles = 100
   LET ch = base.Channel.create()
   CALL ch.openFile("stress.html", "w")
   CALL ch.writeLine("<html>")
@@ -11,7 +11,7 @@ MAIN
   CALL ch.writeLine("</body>")
   CALL ch.writeLine(
       '<script language="JavaScript" type="text/javascript">var cnt=0;var starttime = new Date().getTime();</script>')
-  FOR i = 1 TO numFiles
+  FOR i = 1 TO utils.numStress
     LET func = SFMT("stress%1()", i)
     LET jsfile = SFMT("stress%1.js", i)
     CALL ch.writeLine(
@@ -21,7 +21,7 @@ MAIN
   END FOR
   CALL ch.writeLine(
       SFMT('<script language="JavaScript" type="text/javascript" src="endStress.js" onload="endStress(%1)"></script>',
-          numFiles))
+          utils.numStress))
   CALL ch.writeLine("</html>")
 END MAIN
 
