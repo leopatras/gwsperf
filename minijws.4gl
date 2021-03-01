@@ -71,7 +71,7 @@ DEFINE _opt_port STRING
 DEFINE _verbose BOOLEAN
 DEFINE _sel TSelectionRec
 DEFINE _selId INT
-DEFINE _starttime DATETIME HOUR TO FRACTION(1)
+DEFINE _starttime DATETIME HOUR TO FRACTION(4)
 DEFINE _stderr base.Channel
 
 DEFINE _pendingKeys HashSet
@@ -79,6 +79,7 @@ DEFINE _htpre STRING
 DEFINE _serverkey SelectionKey
 DEFINE _server ServerSocketChannel
 DEFINE _didAccept BOOLEAN
+DEFINE _calls INT
 
 MAIN
   DEFINE socket ServerSocket
@@ -294,6 +295,7 @@ END FUNCTION
 
 FUNCTION httpHandler()
   DEFINE text, path STRING
+  DEFINE diff INTERVAL MINUTE TO FRACTION(4)
   LET path = _sel.path
   CALL log(SFMT("httpHandler '%1' for:%2", path, printSel(_sel.*)))
   CASE
@@ -304,8 +306,12 @@ FUNCTION httpHandler()
     WHEN path == "/exit"
       CALL writeResponseCt("Exit seen", "text/plain")
       DISPLAY "Finished in :", CURRENT - _starttime
+      LET diff= CURRENT - _starttime
+      DISPLAY "Finished in :",diff
+      DISPLAY "numcalls:",_calls,",time per call:",diff/_calls
       EXIT PROGRAM
     OTHERWISE
+      LET _calls = _calls+1
       IF NOT findFile(path) THEN
         CALL http404(path)
       END IF

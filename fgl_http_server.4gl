@@ -3,15 +3,17 @@ IMPORT util
 IMPORT os
 IMPORT FGL utils
 
-DEFINE m_starttime DATETIME HOUR TO FRACTION(1)
+DEFINE m_starttime DATETIME HOUR TO FRACTION(4)
 DEFINE m_isMac BOOLEAN
 DEFINE m_verbose BOOLEAN
+DEFINE m_calls INT
 
 MAIN
   DEFINE port INT
   DEFINE text, path, data, content, fn STRING
   DEFINE c base.Channel
   DEFINE t TEXT
+  DEFINE diff INTERVAL MINUTE TO FRACTION(4)
   LET m_starttime=CURRENT
   CALL init()
   LET port = findFreeServerPort(9100,9300,TRUE)
@@ -41,6 +43,7 @@ MAIN
         CALL writeResponse(c, "Exit seen")
         EXIT WHILE
       OTHERWISE
+        LET m_calls=m_calls+1
         LET fn = path.subString(2, path.getLength())
         --DISPLAY "try reading:", fn
         IF NOT os.Path.exists(fn) THEN
@@ -53,7 +56,9 @@ MAIN
         END IF
     END CASE
   END WHILE
-  DISPLAY "Finished in :",CURRENT - m_starttime
+  LET diff= CURRENT - m_starttime
+  DISPLAY "Finished in :",diff
+  DISPLAY "numcalls:",m_calls,",time per call:",diff/m_calls
 END MAIN
 
 FUNCTION init()

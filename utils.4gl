@@ -1,12 +1,12 @@
 IMPORT os
 
-PUBLIC CONSTANT numStress=100
+PUBLIC CONSTANT numStress=1000
 
 DEFINE _gbcdir STRING
 
 FUNCTION openBrowserWithStress(port INT)
   DEFINE url STRING
-  LET url=sfmt("http://localhost:%1/stress.html",port)
+  LET url=sfmt("http://127.0.0.1:%1/stress.html",port)
   CALL openBrowser(url)
 END FUNCTION
 

@@ -8,13 +8,15 @@ IMPORT FGL fglproxy
 DEFINE m_htport INT
 DEFINE m_owndir, m_privdir STRING
 DEFINE m_showallheaders STRING
-DEFINE m_starttime DATETIME HOUR TO FRACTION(1)
+DEFINE m_starttime DATETIME HOUR TO FRACTION(4)
 DEFINE m_verbose BOOLEAN
+DEFINE m_calls INT
 
 MAIN
   DEFINE req com.HTTPServiceRequest
   DEFINE text, url, path, fname, pre,clitag STRING
   DEFINE gzip BOOLEAN
+  DEFINE diff INTERVAL MINUTE TO FRACTION(4)
   LET m_starttime=CURRENT
   LET m_verbose=FALSE
   CALL fglproxy.init()
@@ -64,11 +66,14 @@ MAIN
         OTHERWISE
           LET fname = path.subString(2,path.getLength())
           --DISPLAY "fname:",fname
+          LET m_calls=m_calls+1
           CALL fglproxy.processFile(req, fname, clitag, gzip, TRUE) --do cache
       END CASE
     END IF
   END WHILE
-  DISPLAY "Finished in :",CURRENT - m_starttime
+  LET diff= CURRENT - m_starttime
+  DISPLAY "Finished in :",diff
+  DISPLAY "numcalls:",m_calls,",time per call:",diff/m_calls
 END MAIN
 
 FUNCTION getUrlPath(url)
