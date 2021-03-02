@@ -1,3 +1,6 @@
+ifdef windir
+WINDIR=$(windir)
+endif
 
 %.42f: %.per 
 	fglform -M $<
@@ -29,6 +32,16 @@ genstressf: genstress.42m fgl_http_server.42m endStress.js
 genstressj: genstress.42m minijws.42m endStress.js
 	fglrun genstress
 	fglrun minijws
+
+fglwebrun:
+	git clone https://github.com/FourjsGenero/tool_fglwebrun.git fglwebrun
+
+fc1000: fc1000.42m fglwebrun
+ifdef WINDIR
+	set GDC=1&&fglwebrun\fglwebrun fc1000
+else
+	GDC=1 fglwebrun/fglwebrun fc1000
+endif
 
 clean:
 	rm -rf *.42? FontAwesome.ttf stress*.js stress.html priv

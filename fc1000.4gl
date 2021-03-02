@@ -9,6 +9,6 @@ MAIN
     CALL ui.interface.frontCall("standard","feinfo",["fename"], [])
   END FOR
   LET diff=CURRENT-starttime
-  --CALL fgl_winMessage("Info",SFMT("time:%1,time for one frontcall:%2",diff,diff/MAXCNT),"info")
+  CALL fgl_winMessage("Info",SFMT("time:%1,time for one frontcall:%2",diff,diff/MAXCNT),"info")
   DISPLAY sfmt("time:%1,time for one frontcall:%2",diff,diff/MAXCNT)
 END MAIN
